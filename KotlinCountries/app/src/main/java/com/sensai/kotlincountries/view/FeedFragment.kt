@@ -5,13 +5,22 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.Navigation
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.sensai.kotlincountries.R
+import com.sensai.kotlincountries.adapter.CountryAdapter
 import com.sensai.kotlincountries.model.Country
+import com.sensai.kotlincountries.viewmodel.FeedViewModel
 import kotlinx.android.synthetic.main.fragment_feed.*
 
 class FeedFragment : Fragment() {
-    // TODO: Rename and change types of parameters
+    private lateinit var viewModel: FeedViewModel
+    private var countryAdapter = CountryAdapter(arrayListOf())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,9 +36,46 @@ class FeedFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-      /*  button.setOnClickListener {
-        val action= FeedFragmentDirections.actionFeedFragmentToCountryFragment()
-            Navigation.findNavController(it).navigate(action)
-        }*/
+        viewModel = ViewModelProviders.of(this).get(FeedViewModel::class.java)
+        viewModel.refreshData()
+
+        countryList.layoutManager = LinearLayoutManager(context)
+        countryList.adapter = countryAdapter
+        /*  button.setOnClickListener {
+          val action= FeedFragmentDirections.actionFeedFragmentToCountryFragment()
+              Navigation.findNavController(it).navigate(action)
+          }*/
+        observeLiveData()
+    }
+
+    fun observeLiveData() {
+        viewModel.countries.observe(viewLifecycleOwner, Observer { countries ->
+            countries?.let {
+                countryList.visibility = View.VISIBLE
+                countryAdapter.updateCountryList(countries)
+            }
+        })
+        viewModel.countryError.observe(viewLifecycleOwner, Observer { error ->
+            error?.let {
+                if (it) {
+                    countryError.visibility = View.VISIBLE
+
+                } else {
+                    countryError.visibility = View.GONE
+                }
+
+            }
+        })
+        viewModel.countryLoading.observe(viewLifecycleOwner, Observer { loading ->
+            loading?.let {
+                if (it) {
+                    countryLoading.visibility = View.VISIBLE
+                    countryList.visibility = View.GONE
+                    countryError.visibility = View.GONE
+                } else {
+                    countryLoading.visibility = View.GONE
+                }
+            }
+        })
     }
 }
