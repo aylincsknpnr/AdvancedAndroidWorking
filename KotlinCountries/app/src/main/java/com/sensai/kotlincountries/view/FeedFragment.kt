@@ -45,10 +45,19 @@ class FeedFragment : Fragment() {
           val action= FeedFragmentDirections.actionFeedFragmentToCountryFragment()
               Navigation.findNavController(it).navigate(action)
           }*/
+
+        swipeRefreshLayout.setOnRefreshListener {
+            countryList.visibility = View.GONE
+            countryError.visibility = View.GONE
+            countryLoading.visibility = View.VISIBLE
+            swipeRefreshLayout.isRefreshing = false//bunu kapatıp kendi loadingimizi kullanıyoruz
+            viewModel.refreshData()
+        }
         observeLiveData()
     }
 
-    fun observeLiveData() {
+
+    private fun observeLiveData() {
         viewModel.countries.observe(viewLifecycleOwner, Observer { countries ->
             countries?.let {
                 countryList.visibility = View.VISIBLE
