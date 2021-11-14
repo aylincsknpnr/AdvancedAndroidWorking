@@ -45,6 +45,8 @@ class FeedFragment : Fragment() {
           val action= FeedFragmentDirections.actionFeedFragmentToCountryFragment()
               Navigation.findNavController(it).navigate(action)
           }*/
+       /* val myString="James"
+        myString.myExtension("hahaha")*/
 
         swipeRefreshLayout.setOnRefreshListener {
             countryList.visibility = View.GONE
