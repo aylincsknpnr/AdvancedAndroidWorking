@@ -1,8 +1,10 @@
 package com.sensai.kotlincountries.viewmodel
 
+import android.app.Application
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.sensai.kotlincountries.model.Country
+import com.sensai.kotlincountries.service.CountryDatabase
 import com.sensai.kotlincountries.service.CountryService
 import io.reactivex.Scheduler
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -10,8 +12,11 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.observers.DisposableObserver
 import io.reactivex.observers.DisposableSingleObserver
 import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import kotlin.coroutines.CoroutineContext
 
-class FeedViewModel : ViewModel() {
+class FeedViewModel(application: Application) : BaseViewModel(application) {
     val countries = MutableLiveData<List<Country>>()
     val countryError = MutableLiveData<Boolean>()
     val countryLoading = MutableLiveData<Boolean>()
@@ -41,16 +46,14 @@ class FeedViewModel : ViewModel() {
                 .getData()
                 .subscribeOn(Schedulers.newThread()) //nerede zamanlayarak yapacağımızı belirtiyoruz
                 .observeOn(AndroidSchedulers.mainThread()) //ana threadde göstereceğimizi söylüyoruz
-                .subscribeWith(object : DisposableSingleObserver<List<Country>>(){
+                .subscribeWith(object : DisposableSingleObserver<List<Country>>() {
                     override fun onSuccess(t: List<Country>) {
-                        countries.value=t
-                        countryError.value=false
-                        countryLoading.value=false
+                        storeInSqlite(t)
                     }
 
                     override fun onError(e: Throwable) {
-                        countryLoading.value=false
-                        countryError.value=true
+                        countryLoading.value = false
+                        countryError.value = true
                         e.printStackTrace()
                     }
 
@@ -58,4 +61,27 @@ class FeedViewModel : ViewModel() {
 
         )
     }
+
+    private fun showCountries(countryList: List<Country>) {
+        countries.value = countryList
+        countryError.value = false
+        countryLoading.value = false
+    }
+
+    private fun storeInSqlite(list: List<Country>) {
+        //coroutine
+        launch {
+            val dao = CountryDatabase(getApplication()).countryDao()
+            dao.deleteAllCountries()
+           val listLong= dao.insertAll(*list.toTypedArray())
+            var i=0
+            while(i<list.size){
+                list[i].uuid=listLong[i].toInt()
+                i=i+1
+            }
+            showCountries(list)
+        }
+    }
+
+
 }
