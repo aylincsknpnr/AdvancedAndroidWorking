@@ -1,11 +1,13 @@
 package com.sensai.kotlincountries.viewmodel
 
 import android.app.Application
+import android.widget.Toast
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.sensai.kotlincountries.model.Country
 import com.sensai.kotlincountries.service.CountryDatabase
 import com.sensai.kotlincountries.service.CountryService
+import com.sensai.kotlincountries.util.CustomSharedPreferences
 import io.reactivex.Scheduler
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -20,15 +22,20 @@ class FeedViewModel(application: Application) : BaseViewModel(application) {
     val countries = MutableLiveData<List<Country>>()
     val countryError = MutableLiveData<Boolean>()
     val countryLoading = MutableLiveData<Boolean>()
-
+    private var refreshTime=10*60*1000*1000*1000L //nano sn cinsinden 10 dk da bir refesh yapılması
     private val countryService = CountryService()
-
+    private var customPreferences=CustomSharedPreferences(getApplication())
     //Call işlemleri bittiğinde veriyi bu objeye yazıp fragment temizleneğinde işimiz bittğinde kullan at şeklinde bu objeyi ortadan kaldırıoyoruz
     private val disposable = CompositeDisposable()
 
 
     fun refreshData() {
-        getDataFromApi()
+        val updateTime=customPreferences.getTime()
+        if (updateTime!= null && updateTime!= 0L && System.nanoTime()-updateTime<refreshTime){
+            getDataFromSQLite()
+        }else{
+            getDataFromApi()
+        }
         /*  val country = Country("Turkey", "Asia", "Ankara", "TRY", "Turkish", "www.ss.com")
           val country2 = Country("Fransa", "Europe", "Paris", "EUR", "French", "www.bb.com")
           val country3 = Country("Almanya", "Europe", "Berlin", "EUR", "German", "www.cc.com")
@@ -39,6 +46,17 @@ class FeedViewModel(application: Application) : BaseViewModel(application) {
           countryLoading.value=false*/
     }
 
+    private fun getDataFromSQLite() {
+        countryLoading.value = true
+        launch {
+            val countries=CountryDatabase(getApplication()).countryDao().getAllCountries()
+            showCountries(countries)
+            Toast.makeText(getApplication(),"Countries from SQLite",Toast.LENGTH_LONG).show()
+        }
+    }
+    fun refreshFromAPI(){
+       getDataFromApi()
+    }
     private fun getDataFromApi() {
         countryLoading.value = true
         disposable.add(
@@ -49,6 +67,7 @@ class FeedViewModel(application: Application) : BaseViewModel(application) {
                 .subscribeWith(object : DisposableSingleObserver<List<Country>>() {
                     override fun onSuccess(t: List<Country>) {
                         storeInSqlite(t)
+                        Toast.makeText(getApplication(),"Countries from API",Toast.LENGTH_LONG).show()
                     }
 
                     override fun onError(e: Throwable) {
@@ -81,7 +100,12 @@ class FeedViewModel(application: Application) : BaseViewModel(application) {
             }
             showCountries(list)
         }
+        //Veritabanına kayıt zamanını kaydediyoruz
+        customPreferences.saveTime(System.nanoTime())
     }
 
-
+    override fun onCleared() {
+        super.onCleared()
+        disposable.clear()
+    }
 }
