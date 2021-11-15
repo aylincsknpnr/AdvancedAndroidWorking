@@ -2,6 +2,7 @@ package com.sensai.kotlincountries.util
 
 import android.content.Context
 import android.widget.ImageView
+import androidx.databinding.BindingAdapter
 import androidx.swiperefreshlayout.widget.CircularProgressDrawable
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
@@ -34,4 +35,10 @@ fun placeholderProgressbar(context: Context): CircularProgressDrawable {
         start()
 
     }
+}
+
+//Bindingadapter xml de çalıştırılabilen fonksiyon haline getiriyor
+@BindingAdapter("android.downloadUrl")
+fun downloadImage(view: ImageView, url:String?){
+    view.downloadFromUrl(url, placeholderProgressbar(view.context))
 }

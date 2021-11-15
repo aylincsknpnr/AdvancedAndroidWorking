@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-
+<data>
+    <variable
+        name="selectedCountry"
+        type="com.sensai.kotlincountries.model.Country" />
+</data>
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -14,6 +18,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
             android:minHeight="200dp"
+            android.downloadUrl="@{selectedCountry.imageUrl}"
             android:scaleType="fitCenter">
 
         </ImageView>
@@ -25,6 +30,7 @@
             android:layout_below="@+id/countryImage"
             android:layout_centerHorizontal="true"
             android:padding="7dp"
+            android:text="@{selectedCountry.countryName}"
             android:textSize="20sp"
             android:textStyle="bold">
 
@@ -37,11 +43,13 @@
             android:layout_below="@+id/countryName"
             android:layout_centerHorizontal="true"
             android:padding="7dp"
+            android:text="@{selectedCountry.countryCapital}"
             android:textSize="16sp">
 
         </TextView>
 
         <TextView
+            android:text="@{selectedCountry.countryRegion}"
             android:id="@+id/countryRegion"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -53,6 +61,7 @@
         </TextView>
 
         <TextView
+            android:text="@{selectedCountry.countryCurrency}"
             android:id="@+id/countryCurrency"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -64,6 +73,7 @@
         </TextView>
 
         <TextView
+            android:text="@{selectedCountry.countryLang}"
             android:id="@+id/countryLang"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
